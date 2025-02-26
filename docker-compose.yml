@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   frontend:
     build:
@@ -9,11 +11,13 @@ services:
       - api
 
   postgres:
-    image: postgres:latest
-    environment: &pg-env
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=nextcurl
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
     ports:
       - "5432:5432"
 
@@ -21,26 +25,30 @@ services:
     build:
       context: ./backend/api
       dockerfile: Dockerfile
-    environment: &django-env
-      <<: *pg-env
-      DJANGO_DATABASE_HOST: "postgres"
-      DJANGO_DATABASE_USER: ${POSTGRES_USER:-postgres}
-      DJANGO_DATABASE_NAME: ${POSTGRES_DB:-postgres}
-      DJANGO_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-django-insecure-your-secret-key-here}"
-      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+    volumes:
+      - ./backend/api:/app
     ports:
       - "8000:8000"
+    environment:
+      - DJANGO_DEBUG=1
+      - DJANGO_DATABASE_HOST=postgres
+      - DJANGO_DATABASE_NAME=nextcurl
+      - DJANGO_DATABASE_USER=user
+      - DJANGO_DATABASE_PASSWORD=password
     depends_on:
       - postgres
 
-  api-migration:
+  migration:
     build:
       context: ./backend/api
       dockerfile: Dockerfile
-    command: python manage.py migrate --noinput
+    command: python manage.py migrate
     environment:
-      <<: *django-env
+      - DJANGO_DEBUG=1
+      - DJANGO_DATABASE_HOST=postgres
+      - DJANGO_DATABASE_NAME=nextcurl
+      - DJANGO_DATABASE_USER=user
+      - DJANGO_DATABASE_PASSWORD=password
     depends_on:
       - postgres
 
@@ -74,3 +82,6 @@ services:
     image: redis:latest
     ports:
       - "6379:6379"
+
+volumes:
+  postgres_data:

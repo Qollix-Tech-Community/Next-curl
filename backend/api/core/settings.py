@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,7 +22,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_simplejwt",
     "courses",
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -58,10 +61,11 @@ WSGI_APPLICATION = "core.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": os.getenv("DJANGO_DATABASE_ENGINE", "django.db.backends.postgresql"),
-        "HOST": os.getenv("DJANGO_DATABASE_HOST", "postgres"),
+        "HOST": os.getenv("DJANGO_DATABASE_HOST", "localhost"),
         "NAME": os.getenv("DJANGO_DATABASE_NAME", "nextcurl"),
-        "USER": os.getenv("DJANGO_DATABASE_USER", "user"),
-        "PASSWORD": os.getenv("DJANGO_DATABASE_PASSWORD", "password"),
+        "USER": os.getenv("DJANGO_DATABASE_USER", os.getenv("USER")),
+        "PASSWORD": os.getenv("DJANGO_DATABASE_PASSWORD", ""),
+        "PORT": os.getenv("DJANGO_DATABASE_PORT", "5432"),
     }
 }
 
@@ -95,7 +99,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # REST Framework settings
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
-    ]
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }

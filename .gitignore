@@ -42,4 +42,8 @@ ENV/
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Database
+*.sqlite3
+postgres_data/
